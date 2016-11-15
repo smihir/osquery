@@ -1,0 +1,12 @@
+table_name("tlb_events")
+description("Track tlb misses per cpu for system/processes")
+schema([
+    Column("target_path", TEXT, "The path associated with the event"),
+    Column("action", TEXT, "Change action (UPDATE, REMOVE, etc)"),
+    Column("transaction_id", BIGINT, "ID used during bulk update"),
+    Column("time", BIGINT, "Time of file event"),
+    Column("dtlb_loads", BIGINT, "Number of TLB Loads"),
+    Column("dtlb_load_misses", BIGINT, "Number of TLB Load Misses"),
+])
+attributes(event_subscriber=True)
+implementation("tlb_events@tlb_events::genTable")
