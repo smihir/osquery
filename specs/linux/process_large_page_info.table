@@ -1,0 +1,10 @@
+table_name("process_large_page_info")
+description("Information about large pages used by process")
+schema([
+    Column("pid", INTEGER, "Process (or thread) ID", index=True),
+    Column("huge_memory", BIGINT, "number of large pages mapped in process"),
+])
+implementation("processes@genProcessHugePagesInfo")
+examples([
+  "select * from process_large_page_info where pid = 1",
+])

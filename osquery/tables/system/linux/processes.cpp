@@ -183,6 +183,41 @@ void genProcessMap(const std::string& pid, QueryData& results) {
   }
 }
 
+long long getSmapFieldByName(const std::string& field, std::string& content) {
+  long long val = 0;
+  for (auto& line : osquery::split(content, "\n")) {
+    auto fields = osquery::split(line, ":");
+    // If can't read address, not sure.
+    if (fields.size() != 2) {
+      continue;
+    }
+
+    if (field.compare(fields[0]) != 0) {
+      continue;
+    }
+
+    try {
+      val += std::stoll(fields[1], nullptr, 10);
+    } catch (const std::exception &e) {
+      return -1;
+    }
+  }
+
+  return val;
+}
+
+void genLargePagesInfo(const std::string& pid, QueryData& results) {
+  auto map = getProcAttr("smaps", pid);
+
+  std::string content;
+  readFile(map, content);
+  Row r;
+  auto kb = getSmapFieldByName("AnonHugePages", content);
+  r["pid"] = pid;
+  r["huge_memory"] = std::to_string(kb);
+  results.push_back(std::move(r));
+}
+
 struct SimpleProcStat {
   // Output from string parsing /proc/<pid>/status.
   std::string name; // Name:
@@ -384,6 +419,17 @@ QueryData genProcessMemoryMap(QueryContext& context) {
   auto pidlist = getProcList(context);
   for (const auto& pid : pidlist) {
     genProcessMap(pid, results);
+  }
+
+  return results;
+}
+
+QueryData genProcessHugePagesInfo(QueryContext& context) {
+  QueryData results;
+
+  auto pidlist = getProcList(context);
+  for (const auto& pid : pidlist) {
+    genLargePagesInfo(pid, results);
   }
 
   return results;
